@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch-dashboards-service
+  labels:
+    app: opensearch-dashboards
+spec:
+  type: NodePort
+  ports:
+  - name: port5601
+    port: 5601
+    targetPort: osd
+    nodePort: 30601
+  selector:
+    app: opensearch-dashboards
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opensearch-dashboards-deployment
+spec:
+  selector:
+    matchLabels:
+      app: opensearch-dashboards
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: opensearch-dashboards
+    spec:
+      containers:
+      - name: opensearch-dashboards
+        image: opensearchproject/opensearch-dashboards:2.15.0
+        ports:
+          - name: osd
+            containerPort: 5601
+        env:
+          - name: OPENSEARCH_HOSTS
+            value: http://opensearch-service.default.svc.cluster.local:9200
