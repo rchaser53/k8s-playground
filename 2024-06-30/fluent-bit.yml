@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fluent-bit-deployment
+spec:
+  selector:
+    matchLabels:
+      app: fluent-bit
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fluent-bit
+    spec:
+      containers:
+      - name: fluent-bit
+        # image: fluent/fluent-bit:latest
+        image: fluent/fluent-bit:latest-debug # debugがないとshellがないのでkubectl execできない
+        volumeMounts:
+        - name: config
+          mountPath: /fluent-bit/etc/conf
+      volumes:
+        - name: config
+          configMap:
+            name: fluent-bit-configmap
+            items:
+              - key: "normal.conf"
+                path: "normal.conf"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-configmap
+data:
+  normal.conf: |
+    [INPUT]
+        name   tail
+        path   /var/log/hoge.log
+        db     /run/fluent-bit-messages.state
+        tag    test_tag
+
+    [OUTPUT]
+        Name  es
+        Match *
+        Host  http://opensearch-service.default.svc.cluster.local:9200
+        Port  9200
+        HTTP_User admin
+        HTTP_Passwd NyanChu1@@@@
+        tls   Off
+        tls.verify  Off
+        Index abc
+        Type  _doc
+
