@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch-service
+  labels:
+    app: opensearch
+spec:
+  type: NodePort
+  ports:
+  - name: port9200
+    port: 9200
+    targetPort: opensearch-9200
+    nodePort: 31200
+  - name: port9600
+    port: 9600
+    targetPort: opensearch-9600
+    nodePort: 31600
+  selector:
+    app: opensearch
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opensearch-deployment
+spec:
+  selector:
+    matchLabels:
+      app: opensearch
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: opensearch
+    spec:
+      containers:
+      - name: opensearch
+        image: opensearchproject/opensearch:2.15.0
+        ports:
+          - name: opensearch-9200
+            containerPort: 9200
+          - name: opensearch-9300
+            containerPort: 9300
+          - name: opensearch-9600
+            containerPort: 9600
+        env:
+          - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+            value: NyanChu1@@@@
+          - name: discovery.type
+            value: 'single-node'
+          - name: plugins.security.ssl.http.enabled
+            value: 'false'
+          - name: sysctlInit.enabled
+            value: 'true'
