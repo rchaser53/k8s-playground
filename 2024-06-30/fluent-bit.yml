@@ -1,3 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluent-bit-service
+  labels:
+    app: fluent-bit
+spec:
+  type: NodePort
+  ports:
+  - name: node-http-8080
+    port: 8080
+    targetPort: node-http-8080
+    nodePort: 30001
+  selector:
+    app: fluent-bit
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,6 +35,12 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /fluent-bit/etc/
+      - name: node
+        image: node:lts-alpine3.20
+        command: ['sh', '-c', "while true; do echo hello | tee -a /home/stdout_and_stderr.log; sleep 15; done"]
+        ports:
+          - name: node-http-8080
+            containerPort: 8080
       volumes:
         - name: config
           configMap:
